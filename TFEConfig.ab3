@@ -1,0 +1,1161 @@
+; XTRA
+; Embedded .xtra Header
+; 
+; General Info
+; -------------------------------------------------------
+; ExePath         = "Games:DarkForces"
+; ExeFile         = "TFEConfig"
+; CreateIcon      = 1
+; Residents       = "all.res"
+; 
+; Compiler
+; -------------------------------------------------------
+; StringBuffer    = 10240
+; MakeSmallest    = 0
+; FuncOptimize    = 1
+; Version         = 0.0.0
+; NumberOfBuilds  = 615
+; 
+; Debugger
+; -------------------------------------------------------
+; CliArgs         = ""
+; StackSize       = 80000
+; RuntimeDebug    = 1
+; DebugInfo       = 0
+; CreateDbgFile   = 0
+; OverflowCheck   = 0
+; AssemblerCheck  = 0
+; InterruptCheck  = 1
+; AutoRun         = 1
+; 
+; Editor
+; -------------------------------------------------------
+; CursorLine      = 429
+; CursorColumn    = 22
+; LabelSearch     = ""
+; LabelRemark     = 0
+; LabelAll        = 0
+; LabelPosition   = 0
+; 
+; Blitz Objects
+; -------------------------------------------------------
+; Max File        = 5
+; Max GadgetList  = 5
+; Max Queue       = 10
+; Max Screen      = 5
+; Max Shape       = 100
+; Max CopList     = 10
+; Max Sprite      = 20
+; Max Stencil     = 5
+; Max Module      = 5
+; Max Window      = 20
+; Max Anim        = 10
+; Max Sound       = 10
+; Max Bank        = 5
+; Max Buffer      = 10
+; Max Slice       = 10
+; Max Page        = 4
+; Max Tape        = 5
+; Max IntuiFont   = 5
+; Max MedModule   = 8
+; Max Palette     = 4
+; Max MenuList    = 5
+; Max BlitzFont   = 4
+; Max GTList      = 20
+; Max BitMap      = 10
+; Max IconInfo    = 1
+; Max NChunky     = 50
+; Max MUIObject   = 50
+; Max PTModule    = 5
+; Max AsyncReq    = 4
+; Max Req-Lib     = 5
+; Max GTMenuList  = 5
+; Max Console     = 5
+; Max TCPSock     = 5
+; Max XBSound     = 10
+; Max Chunky      = 20
+; /XTRA
+
+#debug = 0
+
+Syntax 2
+optimize 4
+
+
+ver$ = "$VER: TFEConfig 0.6 (15.08.2023) By Rob Cranley"
+v$ = "0.6"
+
+
+; Main GUI Constants
+#list = 0
+#type1 = 1
+#key1 = 2
+#get1 = 3
+#type2 = 4
+#key2 = 5
+#get2 = 6
+;#qualifier = 6
+#mouseoptions = 7
+#controlleroptions = 8
+#save = 10
+#cancel = 11
+
+; Get Window Constants
+#g_key = 0
+#g_special = 1
+#g_qualifier = 2
+#g_mouse = 3
+#g_controller = 4
+#g_axis = 5
+#g_mousewheel = 6
+#g_accept = 10
+#g_cancel = 11
+
+
+#maxactions = 55;3  ; 55 ; Reduced to 53 to exclude last two actions
+#maxkeys = 112
+#maxamigakeys = 103
+
+; OS 3.2 / 4.0 Define (not implemented)
+#IDCMP_EXTENDEDMOUSE = $08000000
+
+XINCLUDE "file.include.ab3"
+
+error_SetFlags{0} ; Turn off the automatic error messages on file errors etc.
+
+WBStartup
+
+FindScreen 0
+
+NEWTYPE .listentry
+  dummy.w
+  itemname.s
+  itemtype.w
+End NEWTYPE
+
+
+NEWTYPE .action
+  populated.b[2]
+  actioncode.l[2]
+  actiontype.l[2]
+  mapcode.l[2]
+  mapqualifier.l[2]
+End NEWTYPE
+
+
+DEFTYPE .w swidth, sheight
+DEFTYPE .l version, header
+DEFTYPE .TextFont *Font
+
+
+XINCLUDE "TFEDefines.ab3"
+
+NEWTYPE .inputconfig
+  bindcount.l
+  bindcapacity.l
+  axis.l[#AA_COUNT]
+  controllerflags.l
+  ctrlsensitivity.f[2]
+  ctrldeadzone.f[2]
+  mouseflags.l
+  mousemode.l
+  mousesensitivity.f[2]
+End NEWTYPE
+
+
+Dim List listitems.listentry(0)
+
+itemcount.w = 0
+
+Dim actions.action(#maxactions)
+
+DEFTYPE .inputconfig inputconfig
+
+USEPATH inputconfig
+
+
+; Functions to implement FFP<->IEEE conversions as OS ones appear unusable in Blitz...
+; Yes, these are pretty clunky but speed isn't an issue for this application
+Function.f ieee2ffp{value.f}
+  result.f = 0
+  mantissa.l = Peek.l(&value) & $7FFFFF ; Rightmost 23 bits
+  exponent.l = (Peek.l(&value) LSR 23) & $FF
+  exponent - 127
+  sign.l = Peek.l(&value) LSR 31
+
+  ;NPrint "Value: ", value, ", ", Hex$(Peek.l(&value)), ", ", Bin$(Peek.l(&value))
+  ;NPrint "mantissa: ", mantissa, ", ", Hex$(mantissa), ", ", Bin$(Peek.l(&mantissa))
+  ;NPrint "exponent: ", exponent, ", ", Hex$(exponent), ", ", Bin$(Peek.l(&exponent))
+  ;NPrint "sign: ", sign, ", ", Hex$(sign)
+
+  mancalc.f = 0
+  For i.w = 22 To 0 Step -1
+    If mantissa BitTst i
+      mancalc + (1 / (2^(23 - i)))
+    End If
+  Next i
+
+  If exponent <> -127
+    mancalc + 1
+  End If
+
+  CNIF #debug
+    NPrint "Mancalc: ", mancalc, ", ", Hex$(Peek.l(&mancalc))
+  CEND
+  result = 2 ^ exponent * mancalc
+  If sign Then result * -1
+  Function Return result
+End Function
+
+
+; We're returning a long instead of a float so Blitz doesn't mangle the IEEE-formatted result
+Function.l ffp2ieee{value.f}
+  result.l = 0
+  ;mantissa.l = (Peek.l(&value) LSR 8) & $00FFFFFF
+  ;exponent.l = Peek.l(&value) & $7F
+  ;sign.l = (Peek.l(&value) LSR 7) & %1
+  ;NPrint "Value: ", value, ", ", Hex$(Peek.l(&value)), ", ", Bin$(Peek.l(&value))
+  ;NPrint "mantissa: ", mantissa, ", ", Hex$(mantissa), ", ", Bin$(Peek.l(&mantissa))
+  ;NPrint "exponent: ", exponent, ", ", Hex$(exponent), ", ", Bin$(Peek.l(&exponent))
+  ;NPrint "sign: ", sign, ", ", Hex$(sign)
+
+  x.l = Peek.l(&value)
+  x = x + x
+  If x <> 0 ; If x is 0, no calculations to be done
+    k.b = x & $FF
+    k = Xor(k, $80)
+    k = k LSR 1
+    k - $82
+    x = (x & $FFFFFF00) | k
+    x = (x LSL 16) | (x LSR 16)
+    x = x LSL 7
+    CNIF #debug
+      NPrint "X result: ", x, ", ", Hex$(x), ", ", Bin$(x)
+    CEND
+    result = x
+  End If
+
+  Function Return result
+End Function
+
+
+; Optimise this with a LUT...
+Function.w sdltoraw{code.w}
+  SHARED rawkeys()
+  result.w = 999
+
+  For i.w = 0 To #maxamigakeys
+    If rawkeys(i) = code
+      result = i
+      i = #maxamigakeys
+    End If
+  Next i
+
+  Function Return result
+End Function
+
+
+Function.s getkeyname{code.w, codetype.w}
+  SHARED keyname$(), controllername$(), axisname$()
+  result.s = "<Unknown>"
+  Select codetype
+    Case #keyboard
+      If code < #maxkeys
+        result = keyname$(code);\name
+      End If
+
+    Case #mouse
+      Select code
+        Case #MBUTTON_LEFT
+          result = "Left Mousebutton"
+        Case #MBUTTON_MIDDLE
+          result = "Middle Mousebutton"
+        Case #MBUTTON_RIGHT
+          result = "Right Mousebutton"
+        Case #MBUTTON_X1
+          result = "X1 Mousebutton"
+        Case #MBUTTON_X2
+          result = "X2 Mousebutton"
+      End Select
+
+    Case #controller
+      If code < #CONTROLLER_BUTTON_COUNT
+        result = controllername$(code)
+      Else
+
+      End If
+
+    Case #axis
+      If code < #AXIS_COUNT
+        result = axisname$(code)
+      Else
+
+      End If
+
+    Case #mousewheel
+      Select code
+        Case #MOUSEWHEEL_LEFT
+          result = "Wheel Left"
+        Case #MOUSEWHEEL_RIGHT
+          result = "Wheel Right"
+        Case #MOUSEWHEEL_UP
+          result = "Wheel Up"
+        Case #MOUSEWHEEL_DOWN
+          result = "Wheel Down"
+      End Select
+  End Select
+
+  Function Return result
+End Function
+
+
+Function.s getkeynamesdl{code.w, codetype.w}
+  result.s = "<Unknown>"
+  If codetype = #keyboard
+    rawcode.w = sdltoraw{code}
+  Else
+    rawcode.w = code
+  End If
+
+  If rawcode <> 999
+    result = getkeyname{rawcode, codetype}
+  End If
+
+  Function Return result
+End Function
+
+
+Function.l getcode{selected.w, currentbind.w}
+  SHARED swidth, sheight, rawkeys(), controllername$(), axisname$(), actions()
+  result.l = 999
+  winw.w = 220
+  winh.w = 170
+
+  If actions(selected)\actiontype[currentbind] = #none
+    Function Return result
+  End If
+
+  SubIDCMP #IDCMP_MOUSEMOVE
+  AddIDCMP #IDCMP_EXTENDEDMOUSE ; OS3.2 / 4.x, not implemented here yet...
+
+  winflags.l = #WFLG_ACTIVATE|#WFLG_CLOSEGADGET|#WFLG_DEPTHGADGET|#WFLG_DRAGBAR|#WFLG_NEWLOOKMENUS
+  *win1.l = Window(1, swidth / 2 - winw / 2, sheight / 2 - winh / 2, winw, winh, winflags, "Get Input", 1, 2)
+  DefaultOutput
+  If *win1
+    iw.w = InnerWidth
+    ih.w = InnerHeight
+    Select actions(selected)\actiontype[currentbind] ;codetype
+      Case #keyboard
+        GTText 1, #g_key, 5, 20, iw - 10, 16, "Key", #PLACETEXT_ABOVE, "Press Key"
+        GTCycle 1, #g_special, 5, 52, iw - 10, 16, "Special Key", #PLACETEXT_ABOVE, "-|Left Shift|Right Shift|Control|Left Alt|Right Alt|Left Amiga|Right Amiga"
+
+      Case #mouse
+        GTCycle 1, #g_mouse, 5, 30, iw - 10, 16, "Mouse Button", #PLACETEXT_ABOVE, "Left Mousebutton|Middle Mousebutton|Right Mousebutton|X1 Mousebutton|X2 Mousebutton", actions(selected)\mapcode
+
+      Case #controller
+        For i.w = 0 To #CONTROLLER_BUTTON_COUNT - 1
+          If i <> 6 ; Skip unmappable entry
+            option$ + controllername$(i)
+            If i < #CONTROLLER_BUTTON_COUNT - 1
+              option$ + "|"
+            End If
+          End If
+        Next i
+        currentoption.w = actions(selected)\mapcode[currentbind]
+        If currentoption >= 7
+          currentoption - 1
+        End If
+        GTCycle 1, #g_controller, 5, 30, iw - 10, 16, "Controller Button", #PLACETEXT_ABOVE, option$, currentoption ; actions(selected)\mapcode[currentbind]
+
+      Case #axis
+        For i.w = 0 To #AXIS_COUNT - 1
+          option$ + axisname$(i)
+          If i < #AXIS_COUNT - 1
+            option$ + "|"
+          End If
+        Next i
+        GTCycle 1, #g_axis, 5, 30, iw - 10, 16, "Controller Axis", #PLACETEXT_ABOVE, option$, actions(selected)\mapcode[currentbind]
+
+      Case #mousewheel
+        GTCycle 1, #g_mousewheel, 5, 30, iw - 10, 16, "Mousewheel", #PLACETEXT_ABOVE, "Left|Right|Up|Down", actions(selected)\mapcode[currentbind]
+    End Select
+
+    GTCycle 1, #g_qualifier, 5, 84, iw - 10, 16, "Qualifier", #PLACETEXT_ABOVE, "None|Alt|Control|Shift", actions(selected)\mapqualifier[currentbind]
+
+    GTButton 1, #g_accept, 5, ih - 21, iw / 2 - 7, 16, "Accept", #PLACETEXT_IN
+    GTButton 1, #g_cancel, iw / 2 + 2, ih - 21, iw / 2 - 7, 16, "Cancel", #PLACETEXT_IN
+
+    AttachGTList 1, 1
+    GTBevelBox 1, 0, 0, iw, ih, 0
+    Menus Off
+
+    quit.b = False
+    Repeat
+      ev.l = WaitEvent
+      If EventWindow = 1
+        ec.l = EventCode
+        eq.l = EventQualifier
+        qualflag.b = False ; Set this to read qualifier
+        Select ev
+          Case #IDCMP_CLOSEWINDOW
+            quit = True
+
+          Case #IDCMP_RAWKEY
+            If actions(selected)\actiontype[currentbind] = #keyboard
+              rawcode.w = ec
+              If rawcode < 127 ; Ignore key up events
+                name$ = getkeyname{rawcode, #keyboard}
+
+                GTSetString 1, #g_key, name$
+                result = rawkeys(rawcode)
+                GTSetAttrs 1, #g_special, #GTCY_Active, 0
+                qualflag = True
+
+                CNIF #debug
+                  NPrint "Key code: ", rawcode, ", key: ", name$
+
+                CEND
+
+              End If
+            End If
+
+            ; Clunky, but it works if using Freewheel. Uses arrow events to read mousewheel. Qualifier doesn't seem to register with this fake keypress event though...
+            If actions(selected)\actiontype[currentbind] = #mousewheel
+              Select ec
+                Case $4C
+                  GTSetAttrs 1, #g_mousewheel, #GTCY_Active, #MOUSEWHEEL_UP
+                  qualflag = True
+                Case $4D
+                  GTSetAttrs 1, #g_mousewheel, #GTCY_Active, #MOUSEWHEEL_DOWN
+                  qualflag = True
+                Case $4E
+                  GTSetAttrs 1, #g_mousewheel, #GTCY_Active, #MOUSEWHEEL_RIGHT
+                  qualflag = True
+                Case $4F
+                  GTSetAttrs 1, #g_mousewheel, #GTCY_Active, #MOUSEWHEEL_LEFT
+                  qualflag = True
+              End Select
+            End If
+
+          Case #IDCMP_GADGETUP
+            Select GadgetHit
+              Case #g_special
+                If ec
+                  rawcode.w = ec + $5F
+                  If ec > 2 Then rawcode + 1 ; Skip a blank code in the keymap (space for Right Ctrl?)
+                End If
+                name$ = getkeyname{rawcode, #keyboard}
+                GTSetString 1, #g_key, name$
+                result = rawkeys(rawcode)
+
+              Case #g_qualifier
+                ; Dummy entry because we don't want the qualifier gadget to be involved in qualifier sniffing
+
+              Case #g_accept
+                actions(selected)\mapqualifier[currentbind] = GTGetAttrs(1, #g_qualifier, #GTCY_Active)
+                Select actions(selected)\actiontype[currentbind]
+                  Case #mouse
+                    result = GTGetAttrs(1, #g_mouse, #GTCY_Active)
+
+                  Case #controller
+                    result = GTGetAttrs(1, #g_controller, #GTCY_Active)
+                    If result >= 6
+                      result + 1 ; Compensate for missing entry
+                    End If
+
+                  Case #axis
+                    result = GTGetAttrs(1, #g_axis, #GTCY_Active)
+
+                  Case #mousewheel
+                    result = GTGetAttrs(1, #g_mousewheel, #GTCY_Active)
+
+                End Select
+                quit = True
+
+              Case #g_cancel
+                result = 999
+                quit = True
+
+              Default
+                qualflag = True
+
+            End Select
+
+          Case #IDCMP_MOUSEBUTTONS
+            CNIF #debug
+              NPrint "Mouse clicked: ", Bin$(ec)
+            CEND
+            If actions(selected)\actiontype[currentbind] = #mouse
+              button.w = ec & %111
+              Select button
+                Case 0 ; Left button
+                  GTSetAttrs 1, #g_mouse, #GTCY_Active, #MBUTTON_LEFT
+
+                Case 1 ; Right button
+                  GTSetAttrs 1, #g_mouse, #GTCY_Active, #MBUTTON_RIGHT
+
+                Case 2 ; Middle button
+                  GTSetAttrs 1, #g_mouse, #GTCY_Active, #MBUTTON_MIDDLE
+
+              End Select
+              qualflag = True
+            End If
+
+          ;Case #IDCMP_EXTENDEDMOUSE
+          ;  NPrint "Extended Mouse"
+        End Select
+
+        If qualflag
+          qual.w = #q_none
+          If eq & $03 ; Either shift
+            qual = #q_shift
+          End If
+          If eq & $08 ; Control
+            qual = #q_ctrl
+          End If
+          If eq & $30 ; Either alt
+            qual = #q_alt
+          End If
+
+          GTSetAttrs 1, #g_qualifier, #GTCY_Active, qual
+          CNIF #debug
+            NPrint "Qualifier: ", qual
+          CEND
+        End If
+      End If
+    Until quit
+    DetachGTList 1
+    Free GTList 1
+    CloseWindow 1
+    Activate 0
+    FlushEvents
+    Menus On
+  Else
+    x.l = Request("TFEConfig", "Error - Unable to open window", "Cancel")
+  End If
+  Function Return result
+End Function
+
+
+Statement mouseoptions{}
+  SHARED swidth, sheight, inputconfig
+  ;result.l = 999
+  winw.w = 260
+  winh.w = 190
+
+  AddIDCMP #SLIDERIDCMP
+  SubIDCMP #IDCMP_MOUSEMOVE
+
+  winflags.l = #WFLG_ACTIVATE|#WFLG_CLOSEGADGET|#WFLG_DEPTHGADGET|#WFLG_DRAGBAR|#WFLG_NEWLOOKMENUS
+  *win1.Window = Window(2, swidth / 2 - winw / 2, sheight / 2 - winh / 2, winw, winh, winflags, "Mouse Options", 1, 2)
+  DefaultOutput
+  If *win1
+    iw.w = InnerWidth
+    ih.w = InnerHeight
+    bw.w = iw / 2 - 7
+
+    ; Mouse settings:
+    ; Invert X-axis
+    ; Invert Y-axis
+    ; Mode (None/Look/Turn)
+    ; X sensitivity
+    ; Y sensitivity
+
+    GTCheckBox 2, 0, iw - 21, 5, 16, 16, "Invert X Axis", #PLACETEXT_LEFT|$200 ; $200 flag sets proportional aspect
+    GTCheckBox 2, 1, iw - 21, 25, 16, 16, "Invert Y Axis", #PLACETEXT_LEFT|$200
+
+    GTCycle 2, 2, 170, 45, iw - 175, 16, "Mouse Mode", #PLACETEXT_LEFT, "None|Turn|Look", \mousemode
+    GTSlider 2, 3, iw - 125, 65, 120, 16, "X Sensitivity", #PLACETEXT_LEFT, 5, 99, \mousesensitivity[0] * 50
+    GTSlider 2, 4, iw - 125, 85, 120, 16, "Y Sensitivity", #PLACETEXT_LEFT, 5, 99, \mousesensitivity[1] * 50
+
+    GTButton 2, 10, 5, ih - 21, iw / 2 - 7, 16, "Accept", #PLACETEXT_IN
+    GTButton 2, 11, iw / 2 + 2, ih - 21, iw / 2 - 7, 16, "Cancel", #PLACETEXT_IN
+
+    AttachGTList 2, 2
+    GTBevelBox 2, 0, 0, iw, ih, 0
+
+    If \mouseflags & %1
+      GTSetAttrs 2, 0, #GTCB_Checked, 1
+    End If
+    If \mouseflags & %10
+      GTSetAttrs 2, 1, #GTCB_Checked, 1
+    End If
+
+    Menus Off
+
+    quit.b = False
+    Repeat
+      ev.l = WaitEvent
+      If EventWindow = 2
+        Select ev
+          Case #IDCMP_CLOSEWINDOW
+            quit = True
+
+          Case #IDCMP_GADGETUP
+            Select GadgetHit
+              Case 10 ; Accept
+                If GTStatus(2, 0)
+                  \mouseflags = \mouseflags BitSet 0
+                Else
+                  \mouseflags = \mouseflags BitClr 0
+                End If
+                If GTStatus(2, 1)
+                  \mouseflags = \mouseflags BitSet 1
+                Else
+                  \mouseflags = \mouseflags BitClr 1
+                End If
+                \mousemode = GTGetAttrs(2, 2, #GTCY_Active)
+                \mousesensitivity[0] = GTGetAttrs(2, 3, #GTSL_Level) / 50
+                \mousesensitivity[1] = GTGetAttrs(2, 4, #GTSL_Level) / 50
+                quit = True
+
+              Case 11 ; Cancel
+                quit = True
+            End Select
+          Case #IDCMP_RAWKEY
+            If EventCode = $45
+              quit = True
+            End If
+        End Select
+      End If
+    Until quit
+    DetachGTList 2
+    Free GTList 2
+    CloseWindow 2
+    Activate 0
+    FlushEvents
+    Menus On
+  Else
+    x.l = Request("TFEConfig", "Error - Unable to open Options window", "Cancel")
+  End If
+
+End Statement
+
+
+Statement controlleroptions{}
+  SHARED swidth, sheight, inputconfig
+  ;result.l = 999
+  winw.w = 280
+  winh.w = 190
+
+  AddIDCMP #SLIDERIDCMP
+  SubIDCMP #IDCMP_MOUSEMOVE
+
+  winflags.l = #WFLG_ACTIVATE|#WFLG_CLOSEGADGET|#WFLG_DEPTHGADGET|#WFLG_DRAGBAR|#WFLG_NEWLOOKMENUS
+  *win1.Window = Window(2, swidth / 2 - winw / 2, sheight / 2 - winh / 2, winw, winh, winflags, "Controller Options", 1, 2)
+  If *win1
+    iw.w = InnerWidth
+    ih.w = InnerHeight
+    bw.w = iw / 2 - 7
+
+    ; Controller Settings:
+    ; Enable
+    ; Invert Left X
+    ; Invert Left Y
+    ; Invert Right X
+    ; Invert Right Y
+    ; X sensitivity
+    ; Y sensitivity
+    ; X deadzone
+    ; Y deadzone
+
+
+    GTCheckBox 2, 0, iw - 21, 5, 16, 16, "Enable Controller", #PLACETEXT_LEFT|$200 ; $200 flag sets proportional aspect
+
+    GTCheckBox 2, 1, iw - 100, 25, 16, 16, "Invert X Axis: Left", #PLACETEXT_LEFT|$200
+    GTCheckBox 2, 2, iw - 100, 45, 16, 16, "Invert Y Axis: Left", #PLACETEXT_LEFT|$200
+
+    GTCheckBox 2, 3, iw - 21, 25, 16, 16, "Right", #PLACETEXT_LEFT|$200
+    GTCheckBox 2, 4, iw - 21, 45, 16, 16, "Right", #PLACETEXT_LEFT|$200
+
+    GTSlider 2, 5, 5, 85, 120, 16, "Sensitivity", #PLACETEXT_ABOVE, 5, 99, \ctrlsensitivity[0] * 50
+    GTSlider 2, 6, 5, 105, 120, 16, "", #PLACETEXT_RIGHT, 5, 99, \ctrlsensitivity[1] * 50
+    GTSlider 2, 7, iw - 125, 85, 120, 16, "Deadzone", #PLACETEXT_ABOVE, 0, 99, \ctrldeadzone[0] * 100
+    GTSlider 2, 8, iw - 125, 105, 120, 16, "", #PLACETEXT_LEFT, 0, 99, \ctrldeadzone[1] * 100
+
+
+    GTButton 2, 10, 5, ih - 21, iw / 2 - 7, 16, "Accept", #PLACETEXT_IN
+    GTButton 2, 11, iw / 2 + 2, ih - 21, iw / 2 - 7, 16, "Cancel", #PLACETEXT_IN
+
+    GTText 2, 21, iw / 2 - 4, 85, 16, 16, "", $8000, "X" ; $8000 flag makes borders invisible
+    GTText 2, 22, iw / 2 - 4, 105, 16, 16, "", $8000, "Y"
+
+    AttachGTList 2, 2
+    GTBevelBox 2, 0, 0, iw, ih, 0
+
+    If \controllerflags & %1
+      GTSetAttrs 2, 0, #GTCB_Checked, 1
+    End If
+    If \controllerflags & %10
+      GTSetAttrs 2, 1, #GTCB_Checked, 1
+    End If
+    If \controllerflags & %100
+      GTSetAttrs 2, 2, #GTCB_Checked, 1
+    End If
+    If \controllerflags & %1000
+      GTSetAttrs 2, 3, #GTCB_Checked, 1
+    End If
+    If \controllerflags & %10000
+      GTSetAttrs 2, 4, #GTCB_Checked, 1
+    End If
+
+
+    DefaultOutput
+    Menus Off
+
+    quit.b = False
+    Repeat
+      ev.l = WaitEvent
+      If EventWindow = 2
+        Select ev
+          Case #IDCMP_CLOSEWINDOW
+            quit = True
+
+          Case #IDCMP_GADGETUP
+            Select GadgetHit
+              Case 10 ; Accept
+                For i.w = 0 To 4
+                  If GTStatus(2, i)
+                    \controllerflags = \controllerflags BitSet i
+                  Else
+                    \controllerflags = \controllerflags BitClr i
+                  End If
+                Next i
+
+                \ctrlsensitivity[0] = GTGetAttrs(2, 5, #GTSL_Level) / 50
+                \ctrlsensitivity[1] = GTGetAttrs(2, 6, #GTSL_Level) / 50
+                \ctrldeadzone[0] = GTGetAttrs(2, 7, #GTSL_Level) / 100
+                \ctrldeadzone[1] = GTGetAttrs(2, 8, #GTSL_Level) / 100
+
+                quit = True
+
+              Case 11 ; Cancel
+                quit = True
+            End Select
+
+          Case #IDCMP_RAWKEY
+            If EventCode = $45
+              quit = True
+            End If
+
+        End Select
+      End If
+    Until quit
+    DetachGTList 2
+    Free GTList 2
+    CloseWindow 2
+    Activate 0
+    FlushEvents
+    Menus On
+  Else
+    x.l = Request("TFEConfig", "Error - Unable to open Options window", "Cancel")
+  End If
+
+End Statement
+
+
+Statement savefile{}
+  SHARED header, version, inputconfig, actions()
+
+  ef.b = False
+  fid.l = file_Open{"tfe_input_remapping.bin", #file_forcewrite}
+  If fid >= 0
+    x.l = file_WriteLong{fid, header}
+    x = file_WriteLong{fid, version}
+    \bindcount = 0
+    For i.w = 0 To #maxactions
+      If actions(i)\populated[0]
+        \bindcount + 1
+      End If
+      If actions(i)\populated[1]
+        \bindcount + 1
+      End If
+
+    Next i
+
+    x = file_WriteLong{fid, \bindcount}
+    x = file_WriteLong{fid, \bindcapacity}
+    For i = 0 To 1
+      For j.w = 0 To #maxactions
+        If actions(j)\populated[i]
+          x = file_WriteLong{fid, j} ; actions(j)\actioncode[i]}
+          x = file_WriteLong{fid, actions(j)\actiontype[i]}
+          x = file_WriteLong{fid, actions(j)\mapcode[i]}
+          x = file_WriteLong{fid, actions(j)\mapqualifier[i]}
+        End If
+      Next j
+    Next i
+    x = file_WriteLong{fid, \controllerflags}
+    For i = 0 To 3
+      x = file_WriteLong{fid, \axis[i]}
+    Next i
+    ; We're using Longs here so the IEEE-format numbers don't get mangled by Blitz's float handling
+    dummy.l = ffp2ieee{\ctrlsensitivity[0]}
+    x = file_WriteLong{fid, dummy}
+    dummy.l = ffp2ieee{\ctrlsensitivity[1]}
+    x = file_WriteLong{fid, dummy}
+    dummy.l = ffp2ieee{\ctrldeadzone[0]}
+    x = file_WriteLong{fid, dummy}
+    dummy.l = ffp2ieee{\ctrldeadzone[1]}
+    x = file_WriteLong{fid, dummy}
+
+
+    ;x = file_WriteFloat{fid, \ctrlsensitivity[1]}
+    ;x = file_WriteFloat{fid, \ctrldeadzone[0]}
+    ;x = file_WriteFloat{fid, \ctrldeadzone[1]}
+    x = file_WriteLong{fid, \mouseflags}
+    x = file_WriteLong{fid, \mousemode}
+
+    dummy.l = ffp2ieee{\mousesensitivity[0]}
+    x = file_WriteLong{fid, dummy}
+     dummy.l = ffp2ieee{\mousesensitivity[1]}
+    x = file_WriteLong{fid, dummy}
+
+    ;x = file_WriteFloat{fid, \mousesensitivity[0]}
+    ;x = file_WriteFloat{fid, \mousesensitivity[1]}
+
+    file_Close{fid}
+  Else
+    x.l = Request("TFEConfig", "Error - Unable to write config file", "Cancel")
+  End If
+End Statement
+
+
+
+; Load file
+.loadfile
+ef.b = False
+fid.l = file_Open{"tfe_input_remapping.bin", #file_read}
+If fid >= 0
+  header.l = file_ReadLong{fid}
+  If header = $54464500;"TFE" + 0
+    version.l = file_ReadLong{fid}
+    \bindcount = file_ReadLong{fid}
+    \bindcapacity = file_ReadLong{fid}
+    Dim actions.action(\bindcapacity)
+
+    For i.w = 0 To \bindcount - 1
+      actioncode.w = file_ReadLong{fid}
+      bindnum.b = -1
+      If actions(actioncode)\populated[0] = 0
+        bindnum = 0
+      Else
+        If actions(actioncode)\populated[1] = 0
+          bindnum = 1
+        End If
+      End If
+      If bindnum <> -1
+        actions(actioncode)\populated[bindnum] = 1
+        ;actions(actioncode)\actioncode[bindnum] =
+        actions(actioncode)\actiontype[bindnum] = file_ReadLong{fid}
+        actions(actioncode)\mapcode[bindnum] = file_ReadLong{fid}
+        actions(actioncode)\mapqualifier[bindnum] = file_ReadLong{fid}
+        ;actions(i)\actioncode = file_ReadLong{fid}
+        CNIF #debug
+          NPrint "Bind ", i, ", key: ", actions(actioncode)\mapcode
+        CEND
+      Else
+        dummy.l = file_ReadLong{fid} ; Still need to read those inputs to keep everything aligned.
+        dummy.l = file_ReadLong{fid} ; Still need to read those inputs to keep everything aligned.
+        dummy.l = file_ReadLong{fid} ; Still need to read those inputs to keep everything aligned.
+      End If
+    Next i
+    \controllerflags = file_ReadLong{fid}
+    For i = 0 To 3
+      \axis[i] = file_ReadLong{fid}
+    Next i
+    \ctrlsensitivity[0] = ieee2ffp{file_ReadFloat{fid}}
+    \ctrlsensitivity[1] = ieee2ffp{file_ReadFloat{fid}}
+    \ctrldeadzone[0] = ieee2ffp{file_ReadFloat{fid}}
+    \ctrldeadzone[1] = ieee2ffp{file_ReadFloat{fid}}
+
+    \mouseflags = file_ReadLong{fid}
+    \mousemode = file_ReadLong{fid}
+
+    ;temp.f = file_ReadFloat{fid}
+    \mousesensitivity[0] = ieee2ffp{file_ReadFloat{fid}}
+    \mousesensitivity[1] = ieee2ffp{file_ReadFloat{fid}}
+    CNIF #debug
+      ;NPrint Bin$(temp)
+      NPrint "Controller deadzone: ", \ctrldeadzone[0]
+      NPrint Bin$(\mousesensitivity[0])
+      NPrint "Mouse X sensitivity: ", \mousesensitivity[0], ", ", Hex$(\mousesensitivity[0])
+      NPrint "Mouse Y sensitivity: ", \mousesensitivity[1], ", ", Hex$(\mousesensitivity[1])
+    CEND
+  Else
+    x.l = Request("TFEConfig", "Error - File is not a TFE config file", "Cancel")
+    ef = True
+  End If
+  file_Close{fid}
+Else
+  x.l = Request("TFEConfig", "Unable to open remapping file", "Cancel")
+    ef = True
+End If
+
+If ef Then End
+
+; We should have our data in memory now...
+
+
+For i = 0 To #maxactions - 2 ; Skip the last two #IAS_ entries
+  If i > 1 ; We skip the first two to skip the #IAS_ action codes
+    If AddItem(listitems())
+      listitems()\itemname = actionname$(i)
+    End If
+  End If
+Next i
+
+
+
+swidth.w = ScreenWidth
+sheight.w = ScreenHeight
+winwidth.w = 320
+winheight.w = 200
+
+
+AddIDCMP #LISTVIEWIDCMP|#SLIDERIDCMP
+SubIDCMP #IDCMP_MOUSEMOVE
+
+winflags.l = #WFLG_ACTIVATE|#WFLG_CLOSEGADGET|#WFLG_DEPTHGADGET|#WFLG_DRAGBAR|#WFLG_NEWLOOKMENUS
+*win.l = Window(0, swidth / 2 - winwidth / 2, sheight / 2 - winheight / 2, winwidth, winheight, winflags, "TFEConfig", 1, 2)
+If *win = 0
+  x = Request("TFEConfig", "Error - Unable to open window", "Cancel")
+  End
+End If
+
+iw.w = InnerWidth
+ih.w = InnerHeight
+
+
+GTNewLookProp On
+
+GTTags #GTLV_ShowSelected, 0
+GTListView 0, #list, 5, 5, 160, 137, "", 0, listitems()
+
+GTCycle 0, #type1, 170, 16, iw - 175, 16, "Primary Bind", #PLACETEXT_ABOVE, "<None>|Keyboard|Mouse|Controller|Axis|Scrollwheel"
+GTText 0, #key1, 170, 36, 90, 16, "", #PLACETEXT_ABOVE, ""
+GTButton 0, #get1, 260, 36, iw - 265, 16, "Get", #PLACETEXT_IN
+
+
+GTCycle 0, #type2, 170, 73, iw - 175, 16, "Secondary Bind", #PLACETEXT_ABOVE, "<None>|Keyboard|Mouse|Controller|Axis|Scrollwheel"
+GTText 0, #key2, 170, 93, 90, 16, "", #PLACETEXT_ABOVE, ""
+GTButton 0, #get2, 260, 93, iw - 265, 16, "Get", #PLACETEXT_IN
+
+
+bwidth.w = (iw - 180) / 2
+GTButton 0, #mouseoptions, 170, 121, bwidth, 16, "Mouse", #PLACETEXT_IN
+GTButton 0, #controlleroptions, 170 + bwidth + 5, 121, bwidth, 16, "Pad", #PLACETEXT_IN
+
+GTButton 0, #save, 5, ih - 21, iw / 2 - 7, 16, "Save", #PLACETEXT_IN
+GTButton 0, #cancel, iw / 2 + 2, ih - 21, iw / 2 - 7, 16, "Cancel", #PLACETEXT_IN
+
+AttachGTList 0, 0
+
+GTBevelBox 0, 0, 0, iw, ih, 0
+
+GTDisable 0, #type1
+GTDisable 0, #key1
+GTDisable 0, #get1
+
+GTDisable 0, #type2
+GTDisable 0, #key2
+GTDisable 0, #get2
+
+DefaultOutput
+
+GTMenuTitle 0, 0, "Project"
+GTMenuItem 0, 0, 0, 0, "Save Configuration", "S"
+GTMenuItem 0, 0, 0, 1
+GTMenuItem 0, 0, 0, 2, "About...", "?"
+GTMenuItem 0, 0, 0, 3
+GTMenuItem 0, 0, 0, 4, "Quit", "Q"
+GTMenuTitle 0, 1, "Options"
+GTMenuItem 0, 0, 1, 0, "Mouse Options...", "M"
+GTMenuItem 0, 0, 1, 1, "Controller Options...", "C"
+
+GTSetMenu 0
+
+
+selected.w = -1
+quit.b = False
+Repeat
+  ev.l = WaitEvent
+  ec.l = EventCode
+  Select ev
+    Case #IDCMP_CLOSEWINDOW
+      quit = True
+
+    Case #IDCMP_GADGETUP
+      gh.w = GadgetHit
+      Select gh
+        Case #list
+          If ec <> selected - 2
+            Gosub newselection
+          End If
+
+        Case #get1
+          CNIF #debug
+            NPrint "Action type: ", actions(selected)\actiontype[0]
+          CEND
+          If actions(selected)\actiontype[0] > -1
+            gotcode.l = getcode{selected, 0} ;actions(selected)\mapcode[0], actions(selected)\actiontype[0], actions(selected)\mapqualifier[0]}
+            If gotcode <> 999
+              CNIF #debug
+                NPrint "Got code: ", gotcode
+              CEND
+              actions(selected)\mapcode[0] = gotcode
+              keyname$ = getkeynamesdl{actions(selected)\mapcode[0], actions(selected)\actiontype[0]}
+              GTSetString 0, #key1, keyname$
+
+            End If
+          End If
+
+        Case #get2
+          If actions(selected)\actiontype[0] > -1
+            gotcode.l = getcode{selected, 1} ;actions(selected)\mapcode[1], actions(selected)\actiontype[1], actions(selected)\mapqualifier[1]}
+            If gotcode <> 999
+              CNIF #debug
+                NPrint "Got code: ", gotcode
+              CEND
+              actions(selected)\mapcode[1] = gotcode
+              keyname$ = getkeynamesdl{actions(selected)\mapcode[1], actions(selected)\actiontype[1]}
+              GTSetString 0, #key2, keyname$
+
+            End If
+          End If
+
+        Case #type1
+          actions(selected)\actiontype[0] = ec - 1
+          If ec
+            actions(selected)\populated[0] = 1
+            GTEnable 0, #get1
+          Else
+            actions(selected)\populated[0] = 0
+            GTDisable 0, #get1
+          End If
+
+        Case #type2
+          actions(selected)\actiontype[1] = ec - 1
+          If ec
+            actions(selected)\populated[1] = 1
+            GTEnable 0, #get2
+          Else
+            actions(selected)\populated[1] = 0
+            GTDisable 0, #get2
+          End If
+
+        Case #mouseoptions
+          mouseoptions{}
+
+        Case #controlleroptions
+          controlleroptions{}
+
+        Case #save
+          savefile{}
+        Case #cancel
+          quit = True
+      End Select
+
+    Case #IDCMP_RAWKEY
+      Select ec
+        Case 76 ; Up arrow
+          If selected > 2
+            ;selected - 1
+            ec = selected - 3 ;1
+            GTSetAttrs 0, #list, #GTLV_Selected, ec
+            listtop.l = GTGetAttrs(0, #list, #GTLV_Top)
+            If listtop > 0 AND listtop > selected - 8 ;6
+              GTSetAttrs 0, #list, #GTLV_Top, listtop - 1
+            End If
+            Gosub newselection
+          End If
+        Case 77 ; Down arrow
+          If selected < #maxactions AND selected > -1
+            ec = selected - 1 ;+ 1
+            GTSetAttrs 0, #list, #GTLV_Selected, ec
+            listtop.l = GTGetAttrs(0, #list, #GTLV_Top)
+            If listtop < selected - 11 ;9
+              GTSetAttrs 0, #list, #GTLV_Top, listtop + 1
+            End If
+
+            Gosub newselection
+          End If
+        Case $45
+          quit = True
+
+      End Select
+
+    Case #IDCMP_MENUPICK
+      Select MenuHit
+        Case 0 ; Project
+          Select ItemHit
+            Case 0 ; Save
+              savefile{}
+            Case 2 ; About
+              x = Request("TFEConfig", "TFEConfig " + v$ + "|Control mapping file editor|for The Force Engine|By Rob Cranley","Cool")
+            Case 4 ; Quit
+              quit = True
+          End Select
+
+        Case 1 ; Options
+          Select ItemHit
+            Case 0 ; Mouse
+              mouseoptions{}
+            Case 1 ; Controller
+              controlleroptions{}
+          End Select
+
+      End Select
+  End Select
+Until quit
+
+;CloseFont_ *Font
+End
+
+
+.newselection
+  If selected = -1
+    ;If actions(ec)\populated[0]
+      GTEnable 0, #type1
+      GTEnable 0, #key1
+      GTEnable 0, #get1
+    ;End If
+    ;If actions(ec)\populated[1]
+      GTEnable 0, #type2
+      GTEnable 0, #key2
+      GTEnable 0, #get2
+    ;End If
+
+    ;GTEnable 0, #qualifier
+  End If
+
+  selected = ec + 2 ; compensating for skipping #IAS_ entries
+
+  If actions(selected)\populated[0] = 0
+    actions(selected)\actiontype[0] = -1
+    GTDisable 0, #get1
+  Else
+    GTEnable 0, #get1
+  End If
+  keyname$ = getkeynamesdl{actions(selected)\mapcode[0], actions(selected)\actiontype[0]}
+  GTSetString 0, #key1, keyname$
+  GTSetAttrs 0, #type1, #GTCY_Active, actions(selected)\actiontype[0] + 1
+
+  If actions(selected)\populated[1] = 0
+    actions(selected)\actiontype[1] = -1
+    GTDisable 0, #get2
+  Else
+    GTEnable 0, #get2
+  End If
+  keyname$ = getkeynamesdl{actions(selected)\mapcode[1], actions(selected)\actiontype[1]}
+  GTSetString 0, #key2, keyname$
+  GTSetAttrs 0, #type2, #GTCY_Active, actions(selected)\actiontype[1] + 1
+
+
+
+
+  CNIF #debug
+    NPrint "Clicked: ", selected, ", code: ", actions(selected)\mapcode, ", Key:", keyname$
+  CEND
+Return
+

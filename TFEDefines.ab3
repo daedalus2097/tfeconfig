@@ -1,0 +1,474 @@
+; XTRA
+; Embedded .xtra Header
+; 
+; General Info
+; -------------------------------------------------------
+; ExePath         = "ram:"
+; ExeFile         = "Empty"
+; CreateIcon      = 0
+; Residents       = "all.res"
+; 
+; Compiler
+; -------------------------------------------------------
+; StringBuffer    = 100000
+; MakeSmallest    = 1
+; FuncOptimize    = 1
+; Version         = 0.0.0
+; NumberOfBuilds  = 35
+; 
+; Debugger
+; -------------------------------------------------------
+; CliArgs         = ""
+; StackSize       = 8192
+; RuntimeDebug    = 0
+; DebugInfo       = 0
+; CreateDbgFile   = 0
+; OverflowCheck   = 0
+; AssemblerCheck  = 0
+; InterruptCheck  = 1
+; AutoRun         = 1
+; 
+; Editor
+; -------------------------------------------------------
+; CursorLine      = 383
+; CursorColumn    = 1
+; LabelSearch     = ""
+; LabelRemark     = 0
+; LabelAll        = 0
+; LabelPosition   = 0
+; 
+; Blitz Objects
+; -------------------------------------------------------
+; Max File        = 100
+; Max GadgetList  = 100
+; Max Queue       = 10
+; Max Screen      = 5
+; Max Shape       = 200
+; Max CopList     = 10
+; Max Sprite      = 20
+; Max Stencil     = 5
+; Max Module      = 5
+; Max Window      = 100
+; Max Anim        = 10
+; Max Sound       = 10
+; Max Bank        = 1
+; Max Buffer      = 10
+; Max Slice       = 10
+; Max Page        = 4
+; Max Tape        = 5
+; Max IntuiFont   = 10
+; Max MedModule   = 8
+; Max Palette     = 4
+; Max MenuList    = 100
+; Max BlitzFont   = 1
+; Max GTList      = 100
+; Max BitMap      = 10
+; Max IconInfo    = 1
+; Max NChunky     = 50
+; Max MUIObject   = 50
+; Max PTModule    = 5
+; Max AsyncReq    = 4
+; Max Req-Lib     = 5
+; Max GTMenuList  = 100
+; Max Console     = 5
+; Max TCPSock     = 5
+; Max XBSound     = 10
+; Max Chunky      = 20
+; /XTRA
+
+; Action type defines
+#keyboard = 0
+#mouse = 1
+#controller = 2
+#axis = 3
+#mousewheel = 4
+
+#none = -1 ; This one's internal to TFEConfig
+
+; Qualifier defines
+#q_none = 0
+#q_alt = 1
+#q_ctrl = 2
+#q_shift = 3
+
+
+
+
+; Action names
+
+Dim actionname$(#maxactions)
+For i.w = 0 To #maxactions
+  Read actionname$(i)
+Next i
+
+actioncount.w = 0
+
+.actionnames
+Data$ "Console", "Mission Menu", "System Menu", "PDA", "Night Vision", "Cleats", "Gas Mask", "Head Lamp", "Headwave", "HUD", "Holster Weapon", "Automount"
+Data$ "Previous Weapon", "Next Weapon", "Swap Last Weapon", "Pause", "Automap", "- Screensize", "+ Screensize", "Map Zoom In", "Map Zoom Out", "Map Enable Scroll", "Map Scroll Up"
+Data$ "Map Scroll Down", "Map Scroll Left", "Map Scroll Right", "Map Layer Up", "Map Layer Down", "Forward", "Backward", "Strafe Left", "Strafe Right", "Turn Left", "Turn Right", "Look Up", "Look Down", "Centre View"
+Data$ "Run", "Slow", "Crouch", "Jump", "Use", "Weapon 1", "Weapon 2", "Weapon 3", "Weapon 4", "Weapon 5", "Weapon 6", "Weapon 7", "Weapon 8", "Weapon 9", "Weapon 10", "Primary Fire", "Secondary Fire", "Quick Save", "Quick Load"
+
+
+; Key Definitions (SDL)
+
+#KEY_UNKNOWN = 999 ;0 ; Changed from 0 to differentiate from Amiga rawkey 0 (')
+#KEY_A = 4
+#KEY_B = 5
+#KEY_C = 6
+#KEY_D = 7
+#KEY_E = 8
+#KEY_F = 9
+#KEY_G = 10
+#KEY_H = 11
+#KEY_I = 12
+#KEY_J = 13
+#KEY_K = 14
+#KEY_L = 15
+#KEY_M = 16
+#KEY_N = 17
+#KEY_O = 18
+#KEY_P = 19
+#KEY_Q = 20
+#KEY_R = 21
+#KEY_S = 22
+#KEY_T = 23
+#KEY_U = 24
+#KEY_V = 25
+#KEY_W = 26
+#KEY_X = 27
+#KEY_Y = 28
+#KEY_Z = 29
+#KEY_1 = 30
+#KEY_2 = 31
+#KEY_3 = 32
+#KEY_4 = 33
+#KEY_5 = 34
+#KEY_6 = 35
+#KEY_7 = 36
+#KEY_8 = 37
+#KEY_9 = 38
+#KEY_0 = 39
+#KEY_RETURN = 40
+#KEY_ESCAPE = 41
+#KEY_BACKSPACE = 42
+#KEY_TAB = 43
+#KEY_SPACE = 44
+#KEY_MINUS = 45
+#KEY_EQUALS = 46
+#KEY_LEFTBRACKET = 47
+#KEY_RIGHTBRACKET = 48
+#KEY_BACKSLASH = 49
+#KEY_NONUSHASH = 50
+#KEY_SEMICOLON = 51
+#KEY_APOSTROPHE = 52
+#KEY_GRAVE = 53
+#KEY_COMMA = 54
+#KEY_PERIOD = 55
+#KEY_SLASH = 56
+#KEY_CAPSLOCK = 57
+#KEY_F1 = 58
+#KEY_F2 = 59
+#KEY_F3 = 60
+#KEY_F4 = 61
+#KEY_F5 = 62
+#KEY_F6 = 63
+#KEY_F7 = 64
+#KEY_F8 = 65
+#KEY_F9 = 66
+#KEY_F10 = 67
+#KEY_F11 = 68
+#KEY_F12 = 69
+#KEY_PRINTSCREEN = 70
+#KEY_SCROLLLOCK = 71
+#KEY_PAUSE = 72
+#KEY_INSERT = 73
+#KEY_HOME = 74
+#KEY_PAGEUP = 75
+#KEY_DELETE = 76
+#KEY_END = 77
+#KEY_PAGEDOWN = 78
+#KEY_RIGHT = 79
+#KEY_LEFT = 80
+#KEY_DOWN = 81
+#KEY_UP = 82
+#KEY_NUMLOCKCLEAR = 83
+#KEY_KP_DIVIDE = 84
+#KEY_KP_MULTIPLY = 85
+#KEY_KP_MINUS = 86
+#KEY_KP_PLUS = 87
+#KEY_KP_ENTER = 88
+#KEY_KP_1 = 89
+#KEY_KP_2 = 90
+#KEY_KP_3 = 91
+#KEY_KP_4 = 92
+#KEY_KP_5 = 93
+#KEY_KP_6 = 94
+#KEY_KP_7 = 95
+#KEY_KP_8 = 96
+#KEY_KP_9 = 97
+#KEY_KP_0 = 98
+#KEY_KP_PERIOD = 99
+#KEY_NONUSBACKSLASH = 100
+#KEY_APPLICATION = 101
+#KEY_POWER = 102
+#KEY_KP_EQUALS = 103
+#KEY_F13 = 104
+#KEY_F14 = 105
+#KEY_F15 = 106
+#KEY_F16 = 107
+#KEY_F17 = 108
+#KEY_F18 = 109
+#KEY_F19 = 110
+#KEY_F20 = 111
+#KEY_F21 = 112
+#KEY_F22 = 113
+#KEY_F23 = 114
+#KEY_F24 = 115
+#KEY_EXECUTE = 116
+#KEY_HELP = 117
+#KEY_MENU = 118
+#KEY_SELECT = 119
+#KEY_STOP = 120
+#KEY_REDO = 121
+#KEY_UNDO = 122
+#KEY_CUT = 123
+#KEY_COPY = 124
+#KEY_PASTE = 125
+#KEY_FIND = 126
+#KEY_MUTE = 127
+#KEY_VOLUMEUP = 128
+#KEY_VOLUMEDOWN = 129
+#KEY_KP_COMMA = 133
+#KEY_KP_EQUALSAS400 = 134
+#KEY_INTERNATIONAL1 = 135
+#KEY_INTERNATIONAL2 = 136
+#KEY_INTERNATIONAL3 = 137
+#KEY_INTERNATIONAL4 = 138
+#KEY_INTERNATIONAL5 = 139
+#KEY_INTERNATIONAL6 = 140
+#KEY_INTERNATIONAL7 = 141
+#KEY_INTERNATIONAL8 = 142
+#KEY_INTERNATIONAL9 = 143
+#KEY_LANG1 = 144
+#KEY_LANG2 = 145
+#KEY_LANG3 = 146
+#KEY_LANG4 = 147
+#KEY_LANG5 = 148
+#KEY_LANG6 = 149
+#KEY_LANG7 = 150
+#KEY_LANG8 = 151
+#KEY_LANG9 = 152
+#KEY_ALTERASE = 153
+#KEY_SYSREQ = 154
+#KEY_CANCEL = 155
+#KEY_CLEAR = 156
+#KEY_PRIOR = 157
+#KEY_RETURN2 = 158
+#KEY_SEPARATOR = 159
+#KEY_OUT = 160
+#KEY_OPER = 161
+#KEY_CLEARAGAIN = 162
+#KEY_CRSEL = 163
+#KEY_EXSEL = 164
+#KEY_KP_00 = 176
+#KEY_KP_000 = 177
+#KEY_THOUSANDSSEPARATOR = 178
+#KEY_DECIMALSEPARATOR = 179
+#KEY_CURRENCYUNIT = 180
+#KEY_CURRENCYSUBUNIT = 181
+#KEY_KP_LEFTPAREN = 182
+#KEY_KP_RIGHTPAREN = 183
+#KEY_KP_LEFTBRACE = 184
+#KEY_KP_RIGHTBRACE = 185
+#KEY_KP_TAB = 186
+#KEY_KP_BACKSPACE = 187
+#KEY_KP_A = 188
+#KEY_KP_B = 189
+#KEY_KP_C = 190
+#KEY_KP_D = 191
+#KEY_KP_E = 192
+#KEY_KP_F = 193
+#KEY_KP_XOR = 194
+#KEY_KP_POWER = 195
+#KEY_KP_PERCENT = 196
+#KEY_KP_LESS = 197
+#KEY_KP_GREATER = 198
+#KEY_KP_AMPERSAND = 199
+#KEY_KP_DBLAMPERSAND = 200
+#KEY_KP_VERTICALBAR = 201
+#KEY_KP_DBLVERTICALBAR = 202
+#KEY_KP_COLON = 203
+#KEY_KP_HASH = 204
+#KEY_KP_SPACE = 205
+#KEY_KP_AT = 206
+#KEY_KP_EXCLAM = 207
+#KEY_KP_MEMSTORE = 208
+#KEY_KP_MEMRECALL = 209
+#KEY_KP_MEMCLEAR = 210
+#KEY_KP_MEMADD = 211
+#KEY_KP_MEMSUBTRACT = 212
+#KEY_KP_MEMMULTIPLY = 213
+#KEY_KP_MEMDIVIDE = 214
+#KEY_KP_PLUSMINUS = 215
+#KEY_KP_CLEAR = 216
+#KEY_KP_CLEARENTRY = 217
+#KEY_KP_BINARY = 218
+#KEY_KP_OCTAL = 219
+#KEY_KP_DECIMAL = 220
+#KEY_KP_HEXADECIMAL = 221
+#KEY_LCTRL = 224
+#KEY_LSHIFT = 225
+#KEY_LALT = 226
+#KEY_LGUI = 227
+#KEY_RCTRL = 228
+#KEY_RSHIFT = 229
+#KEY_RALT = 230
+#KEY_RGUI = 231
+#KEY_MODE = 257
+#KEY_AUDIONEXT = 258
+#KEY_AUDIOPREV = 259
+#KEY_AUDIOSTOP = 260
+#KEY_AUDIOPLAY = 261
+#KEY_AUDIOMUTE = 262
+#KEY_MEDIASELECT = 263
+#KEY_WWW = 264
+#KEY_MAIL = 265
+#KEY_CALCULATOR = 266
+#KEY_COMPUTER = 267
+#KEY_AC_SEARCH = 268
+#KEY_AC_HOME = 269
+#KEY_AC_BACK = 270
+#KEY_AC_FORWARD = 271
+#KEY_AC_STOP = 272
+#KEY_AC_REFRESH = 273
+#KEY_AC_BOOKMARKS = 274
+#KEY_BRIGHTNESSDOWN = 275
+#KEY_BRIGHTNESSUP = 276
+#KEY_DISPLAYSWITCH = 277
+#KEY_KBDILLUMTOGGLE = 278
+#KEY_KBDILLUMDOWN = 279
+#KEY_KBDILLUMUP = 280
+#KEY_EJECT = 281
+#KEY_SLEEP = 282
+#KEY_APP1 = 283
+#KEY_APP2 = 284
+#KEY_AUDIOREWIND = 285
+#KEY_AUDIOFASTFORWARD = 286
+#KEY_LAST = 286
+#KEY_COUNT = 512
+
+
+; Mouse definitions
+#MBUTTON_LEFT = 0
+#MBUTTON_MIDDLE = 1
+#MBUTTON_RIGHT = 2
+#MBUTTON_X1 = 3
+#MBUTTON_X2 = 4
+#MBUTTON_COUNT = 5
+#MBUTTON_UNKNOWN = #MBUTTON_COUNT
+
+
+; Mouse wheel definitions
+#MOUSEWHEEL_LEFT = 0
+#MOUSEWHEEL_RIGHT = 1
+#MOUSEWHEEL_UP = 2
+#MOUSEWHEEL_DOWN = 3
+
+; Controller definitions
+
+#CONTROLLER_BUTTON_A = 0
+#CONTROLLER_BUTTON_B = 1
+#CONTROLLER_BUTTON_X = 2
+#CONTROLLER_BUTTON_Y = 3
+#CONTROLLER_BUTTON_BACK = 4
+#CONTROLLER_BUTTON_GUIDE = 5
+#CONTROLLER_BUTTON_START = 6
+#CONTROLLER_BUTTON_LEFTSTICK = 7
+#CONTROLLER_BUTTON_RIGHTSTICK = 8
+#CONTROLLER_BUTTON_LEFTSHOULDER = 9
+#CONTROLLER_BUTTON_RIGHTSHOULDER = 10
+#CONTROLLER_BUTTON_DPAD_UP = 11
+#CONTROLLER_BUTTON_DPAD_DOWN = 12
+#CONTROLLER_BUTTON_DPAD_LEFT = 13
+#CONTROLLER_BUTTON_DPAD_RIGHT = 14
+#CONTROLLER_BUTTON_COUNT = 15
+#CONTROLLER_BUTTON_UNKNOWN = #CONTROLLER_BUTTON_COUNT
+
+
+; Controller Axis definitions
+#AXIS_LEFT_X = 0
+#AXIS_LEFT_Y = 1
+#AXIS_RIGHT_X = 2
+#AXIS_RIGHT_Y = 3
+#AXIS_LEFT_TRIGGER = 4
+#AXIS_RIGHT_TRIGGER = 5
+#AXIS_COUNT = 6
+#AXIS_UNKNOWN = #AXIS_COUNT
+
+#AA_COUNT = 4 ; Analogue Axes
+
+
+; Raw keycode mapping
+Dim rawkeys.w(#maxamigakeys)
+rawkeys(0) = #KEY_GRAVE, #KEY_1, #KEY_2,#KEY_3,#KEY_4,#KEY_5,#KEY_6,#KEY_7, #KEY_8, #KEY_9,#KEY_0,#KEY_MINUS,#KEY_EQUALS,#KEY_BACKSLASH,#KEY_UNKNOWN,#KEY_KP_0,#KEY_Q,#KEY_W,#KEY_E,#KEY_R,#KEY_T,#KEY_Y,#KEY_U,#KEY_I,#KEY_O,#KEY_P
+rawkeys(26) = #KEY_LEFTBRACKET,#KEY_RIGHTBRACKET,#KEY_UNKNOWN,#KEY_KP_1,#KEY_KP_2,#KEY_KP_3,#KEY_A,#KEY_S,#KEY_D,#KEY_F,#KEY_G,#KEY_H,#KEY_J,#KEY_K,#KEY_L,#KEY_SEMICOLON,#KEY_APOSTROPHE,#KEY_UNKNOWN,#KEY_UNKNOWN
+rawkeys($2D) = #KEY_KP_4,#KEY_KP_5,#KEY_KP_6,#KEY_UNKNOWN,#KEY_Z,#KEY_X,#KEY_C,#KEY_V,#KEY_B,#KEY_N,#KEY_M,#KEY_COMMA,#KEY_PERIOD,#KEY_SLASH,#KEY_UNKNOWN,#KEY_KP_PERIOD,#KEY_KP_7,#KEY_KP_8,#KEY_KP_9,#KEY_SPACE,#KEY_BACKSPACE
+rawkeys($42) = #KEY_TAB,#KEY_KP_ENTER,#KEY_RETURN,#KEY_ESCAPE,#KEY_DELETE,#KEY_UNKNOWN,#KEY_UNKNOWN,#KEY_UNKNOWN,#KEY_KP_MINUS,#KEY_UNKNOWN,#KEY_UP,#KEY_DOWN,#KEY_RIGHT,#KEY_LEFT
+rawkeys($50) = #KEY_F1,#KEY_F2,#KEY_F3,#KEY_F4,#KEY_F5,#KEY_F6,#KEY_F7,#KEY_F8,#KEY_F9,#KEY_F10,#KEY_NUMLOCKCLEAR,#KEY_SCROLLLOCK,#KEY_KP_DIVIDE,#KEY_KP_MULTIPLY,#KEY_KP_PLUS,#KEY_PAUSE,#KEY_LSHIFT,#KEY_RSHIFT,#KEY_UNKNOWN
+rawkeys($63) = #KEY_LCTRL,#KEY_LALT,#KEY_RALT,#KEY_LGUI,#KEY_RGUI
+
+
+; Key names
+
+Restore keynames
+Dim keyname$(#maxamigakeys)
+For i = 0 To #maxamigakeys
+  Read keyname$(i);\name
+Next i
+
+.keynames
+Data$ "'", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "\", "", "Num 0", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "[", "]", "", "Num 1", "Num 2", "Num 3", "A", "S", "D", "F", "G", "H", "J", "K", "L", ";", "#", "<special1>"
+Data$ "", "Num 4", "Num 5", "Num 6", "<special2>", "Z", "X", "C", "V", "B", "N", "M", ",", ".", "/", "", "Num .", "Num 7", "Num 8", "Num 9", "Space", "Backspace", "Tab", "Num Enter", "Enter", "Esc", "Delete", "", "", "", "Num -", ""
+Data$ "Up Arrow", "Down Arrow", "Right Arrow", "Left Arrow", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "Num (", "Num )", "Num /", "Num *", "Num +", "Help"
+Data$ "Left Shift", "Right Shift", "Caps Lock", "Ctrl", "Left Alt", "Right Alt", "Left Amiga", "Right Amiga"
+
+
+; Mouse names
+;Restore mousenames
+;Dim mousename$(#MBUTTON_COUNT)
+;For i = 0 To #MBUTTON_COUNT - 1
+;  Read mousename$(i)
+;Next i
+;
+;.mousenames
+;Data$ "Left Mousebutton", "Middle Mousebutton", "Right Mousebutton", "X1 Mousebutton", "X2 Mousebutton"
+
+
+
+
+; Controller button names
+
+Restore controllernames
+Dim controllername$(#CONTROLLER_BUTTON_COUNT)
+
+For i = 0 To #CONTROLLER_BUTTON_COUNT - 1
+  Read controllername$(i)
+Next i
+
+.controllernames
+Data$ "Cross / Red", "Circle / Blue", "Square / Green", "Triangle / Yellow", "Select", "Start / Play", "<Unknown>", "Left Stick", "Right Stick", "Left Shoulder / Rew", "Right Shoulder / Ffw", "DPad Up", "DPad Down", "DPad Left", "DPad Right"
+
+
+; Controller axis names
+
+Restore axisnames
+Dim axisname$(#AXIS_COUNT)
+
+For i = 0 To #AXIS_COUNT - 1
+  Read axisname$(i)
+Next i
+
+.axisnames
+Data$ "Left X", "Left Y", "Right X", "Right Y", "Left Trigger", "Right Trigger"
+

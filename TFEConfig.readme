@@ -1,0 +1,56 @@
+Short:        Control Editor for Dark Forces
+Author:       Rob Cranley
+Uploader:     robcranley@gmail.com (Rob Cranley)
+Type:         game/edit
+Version:      0.2
+Architecture: m68k-amigaos >= 3.0
+Requires:     Amiga Dark Forces / TFE port
+
+
+TFEConfig
+~~~~~~~~~
+TFEConfig is an editor for the control mapping configuration file used by the
+Amiga port of Dark Forces. This port is based on the open-source game engine,
+The Force Engine, hence the name. The configuration file is in a binary format
+which makes manually changing the settings a little tricky. This editor handles
+the binary file format and allows the user to adjust the various control
+parameters with an intuitive GUI.
+
+Currently supported controls:
+- Individual remapping of all actions to keyboard, mouse or controller
+- Adjustment of mouse sensitivity
+- Inverting mouse axes
+- Adjustment of sensitivity and deadzone of analogue axes on PS controllers
+- Inverting axes on PS controllers
+
+
+Installation
+~~~~~~~~~~~~
+Unpack and move the TFEConfig executable to the Dark Forces game directory. It
+should be in the same directory as the tfe_input_remapping.bin file. It's
+recommended that you create a backup of the configuration file before running
+TFEConfig.
+
+
+Usage
+~~~~~
+TFEConfigRun TFEConfig and it will open the editor window and load in the
+current config file. The main window allows any function to be selected from
+the list and will show the current mapping for that function. A cycle gadget
+allow the type of input to be selected (Keyboard, Mouse, Mousewheel, Controller
+buttons, Controller axes). Click the Get gadget to open a window allowing the
+specific key, button etc. to be selected. For keyboard controls, press the key
+and the chosen key will be registered in the window. Special keys (Ctrl, Shift,
+Alt & Amiga) won't be detected and should instead be selected from the Special
+Keys cycle gadget. Clicking Accept or Cancel returns to the main window.
+
+The Qualifier cycle gadget in the main window lets you select a qualifier key
+that bust also be pressed to perform the selected action.
+
+Mouse... opens the mouse options window, where mouse sensitivity and axis
+inversion can be set.
+
+Controller... opens the controller options window, where analogue axis
+sensitivity, deadzone and inversion can be set.
+
+Save will save the current settings to the config file.
