@@ -2,7 +2,7 @@ Short:        Control Editor for Dark Forces
 Author:       Rob Cranley
 Uploader:     robcranley@gmail.com (Rob Cranley)
 Type:         game/edit
-Version:      0.2
+Version:      0.6
 Architecture: m68k-amigaos >= 3.0
 Requires:     Amiga Dark Forces / TFE port
 
@@ -34,23 +34,25 @@ TFEConfig.
 
 Usage
 ~~~~~
-TFEConfigRun TFEConfig and it will open the editor window and load in the
-current config file. The main window allows any function to be selected from
-the list and will show the current mapping for that function. A cycle gadget
-allow the type of input to be selected (Keyboard, Mouse, Mousewheel, Controller
-buttons, Controller axes). Click the Get gadget to open a window allowing the
-specific key, button etc. to be selected. For keyboard controls, press the key
-and the chosen key will be registered in the window. Special keys (Ctrl, Shift,
-Alt & Amiga) won't be detected and should instead be selected from the Special
-Keys cycle gadget. Clicking Accept or Cancel returns to the main window.
+Run TFEConfig and it will open the editor window and load in the current config
+file. The main window allows any function to be selected from the list and will
+show the current mappings for that function. Two bindings are available per
+action, allowing the same function to be controlled by e.g. a key and a
+controller button. A cycle gadget for each binding allows the type of input to
+be selected (Keyboard, Mouse, Mousewheel, Controller buttons, Controller axes).
+Selecting None will disable that binding. Click the associated Get gadget to
+open a window allowing the specific key, button etc. to be selected. For
+keyboard controls, press the key and the chosen key will be registered in the
+window. Special keys (Ctrl, Shift, Alt & Amiga) won't be detected and should
+instead be selected from the Special Keys cycle gadget. The Qualifier cycle
+gadget lets you select a qualifier key that must also be pressed to perform the
+selected action; this will be set automatically if you hold the qualifier down
+and press the desired key. Clicking Accept or Cancel returns to the main window.
 
-The Qualifier cycle gadget in the main window lets you select a qualifier key
-that bust also be pressed to perform the selected action.
-
-Mouse... opens the mouse options window, where mouse sensitivity and axis
+Mouse opens the mouse options window, where mouse sensitivity and axis
 inversion can be set.
 
-Controller... opens the controller options window, where analogue axis
-sensitivity, deadzone and inversion can be set.
+Pad opens the controller options window, where analogue axis sensitivity,
+deadzone and inversion can be set.
 
 Save will save the current settings to the config file.
