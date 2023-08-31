@@ -14,7 +14,7 @@
 ; MakeSmallest    = 0
 ; FuncOptimize    = 1
 ; Version         = 0.0.0
-; NumberOfBuilds  = 615
+; NumberOfBuilds  = 622
 ; 
 ; Debugger
 ; -------------------------------------------------------
@@ -30,8 +30,8 @@
 ; 
 ; Editor
 ; -------------------------------------------------------
-; CursorLine      = 429
-; CursorColumn    = 22
+; CursorLine      = 995
+; CursorColumn    = 40
 ; LabelSearch     = ""
 ; LabelRemark     = 0
 ; LabelAll        = 0
@@ -81,9 +81,8 @@
 Syntax 2
 optimize 4
 
-
-ver$ = "$VER: TFEConfig 0.6 (15.08.2023) By Rob Cranley"
-v$ = "0.6"
+ver$ = "$VER: TFEConfig 0.7 (31.08.2023) By Rob Cranley"
+v$ = "0.7"
 
 
 ; Main GUI Constants
@@ -112,7 +111,7 @@ v$ = "0.6"
 #g_cancel = 11
 
 
-#maxactions = 55;3  ; 55 ; Reduced to 53 to exclude last two actions
+#maxactions = 55
 #maxkeys = 112
 #maxamigakeys = 103
 
@@ -898,7 +897,7 @@ If ef Then End
 
 
 For i = 0 To #maxactions - 2 ; Skip the last two #IAS_ entries
-  If i > 1 ; We skip the first two to skip the #IAS_ action codes
+  If i > 0 ; We skip the first item skip the unused #IAS_ action code
     If AddItem(listitems())
       listitems()\itemname = actionname$(i)
     End If
@@ -989,7 +988,7 @@ Repeat
       gh.w = GadgetHit
       Select gh
         Case #list
-          If ec <> selected - 2
+          If ec <> selected - 1
             Gosub newselection
           End If
 
@@ -1059,9 +1058,9 @@ Repeat
     Case #IDCMP_RAWKEY
       Select ec
         Case 76 ; Up arrow
-          If selected > 2
+          If selected > 1
             ;selected - 1
-            ec = selected - 3 ;1
+            ec = selected - 2 ;1
             GTSetAttrs 0, #list, #GTLV_Selected, ec
             listtop.l = GTGetAttrs(0, #list, #GTLV_Top)
             If listtop > 0 AND listtop > selected - 8 ;6
@@ -1070,8 +1069,8 @@ Repeat
             Gosub newselection
           End If
         Case 77 ; Down arrow
-          If selected < #maxactions AND selected > -1
-            ec = selected - 1 ;+ 1
+          If selected < #maxactions - 2 AND selected > -1
+            ec = selected ;- 1 ;+ 1
             GTSetAttrs 0, #list, #GTLV_Selected, ec
             listtop.l = GTGetAttrs(0, #list, #GTLV_Top)
             If listtop < selected - 11 ;9
@@ -1129,7 +1128,7 @@ End
     ;GTEnable 0, #qualifier
   End If
 
-  selected = ec + 2 ; compensating for skipping #IAS_ entries
+  selected = ec + 1 ; compensating for skipping #IAS_ entries
 
   If actions(selected)\populated[0] = 0
     actions(selected)\actiontype[0] = -1

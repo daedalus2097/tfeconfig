@@ -56,3 +56,13 @@ Pad opens the controller options window, where analogue axis sensitivity,
 deadzone and inversion can be set.
 
 Save will save the current settings to the config file.
+
+History
+~~~~~~~
+
+0.7 (31.08.2023)
+- Added Strafe action to list of bindable actions
+- Renamed "Mission menu" to "Menu"
+
+0.6 (15.08.2023)
+- First public beta release

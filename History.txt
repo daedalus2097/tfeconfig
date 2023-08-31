@@ -1,0 +1,9 @@
+History
+~~~~~~~
+
+0.7 (31.08.2023)
+- Added Strafe action to list of bindable actions
+- Renamed "Mission menu" to "Menu"
+
+0.6 (15.08.2023)
+- First public beta release

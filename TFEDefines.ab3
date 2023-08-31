@@ -30,8 +30,8 @@
 ; 
 ; Editor
 ; -------------------------------------------------------
-; CursorLine      = 383
-; CursorColumn    = 1
+; CursorLine      = 31
+; CursorColumn    = 21
 ; LabelSearch     = ""
 ; LabelRemark     = 0
 ; LabelAll        = 0
@@ -104,7 +104,7 @@ Next i
 actioncount.w = 0
 
 .actionnames
-Data$ "Console", "Mission Menu", "System Menu", "PDA", "Night Vision", "Cleats", "Gas Mask", "Head Lamp", "Headwave", "HUD", "Holster Weapon", "Automount"
+Data$ "Console", "Strafe", "Menu", "PDA", "Night Vision", "Cleats", "Gas Mask", "Head Lamp", "Headwave", "HUD", "Holster Weapon", "Automount"
 Data$ "Previous Weapon", "Next Weapon", "Swap Last Weapon", "Pause", "Automap", "- Screensize", "+ Screensize", "Map Zoom In", "Map Zoom Out", "Map Enable Scroll", "Map Scroll Up"
 Data$ "Map Scroll Down", "Map Scroll Left", "Map Scroll Right", "Map Layer Up", "Map Layer Down", "Forward", "Backward", "Strafe Left", "Strafe Right", "Turn Left", "Turn Right", "Look Up", "Look Down", "Centre View"
 Data$ "Run", "Slow", "Crouch", "Jump", "Use", "Weapon 1", "Weapon 2", "Weapon 3", "Weapon 4", "Weapon 5", "Weapon 6", "Weapon 7", "Weapon 8", "Weapon 9", "Weapon 10", "Primary Fire", "Secondary Fire", "Quick Save", "Quick Load"
