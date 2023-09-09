@@ -14,7 +14,7 @@
 ; MakeSmallest    = 0
 ; FuncOptimize    = 1
 ; Version         = 0.0.0
-; NumberOfBuilds  = 622
+; NumberOfBuilds  = 625
 ; 
 ; Debugger
 ; -------------------------------------------------------
@@ -30,8 +30,8 @@
 ; 
 ; Editor
 ; -------------------------------------------------------
-; CursorLine      = 995
-; CursorColumn    = 40
+; CursorLine      = 1029
+; CursorColumn    = 1
 ; LabelSearch     = ""
 ; LabelRemark     = 0
 ; LabelAll        = 0
@@ -81,8 +81,8 @@
 Syntax 2
 optimize 4
 
-ver$ = "$VER: TFEConfig 0.7 (31.08.2023) By Rob Cranley"
-v$ = "0.7"
+ver$ = "$VER: TFEConfig 0.8 (09.09.2023) By Rob Cranley"
+v$ = "0.8"
 
 
 ; Main GUI Constants
@@ -93,7 +93,6 @@ v$ = "0.7"
 #type2 = 4
 #key2 = 5
 #get2 = 6
-;#qualifier = 6
 #mouseoptions = 7
 #controlleroptions = 8
 #save = 10
@@ -827,7 +826,7 @@ ef.b = False
 fid.l = file_Open{"tfe_input_remapping.bin", #file_read}
 If fid >= 0
   header.l = file_ReadLong{fid}
-  If header = $54464500;"TFE" + 0
+  If header = $54464500 ;"TFE" + 0
     version.l = file_ReadLong{fid}
     \bindcount = file_ReadLong{fid}
     \bindcapacity = file_ReadLong{fid}
@@ -845,11 +844,9 @@ If fid >= 0
       End If
       If bindnum <> -1
         actions(actioncode)\populated[bindnum] = 1
-        ;actions(actioncode)\actioncode[bindnum] =
         actions(actioncode)\actiontype[bindnum] = file_ReadLong{fid}
         actions(actioncode)\mapcode[bindnum] = file_ReadLong{fid}
         actions(actioncode)\mapqualifier[bindnum] = file_ReadLong{fid}
-        ;actions(i)\actioncode = file_ReadLong{fid}
         CNIF #debug
           NPrint "Bind ", i, ", key: ", actions(actioncode)\mapcode
         CEND
@@ -871,11 +868,9 @@ If fid >= 0
     \mouseflags = file_ReadLong{fid}
     \mousemode = file_ReadLong{fid}
 
-    ;temp.f = file_ReadFloat{fid}
     \mousesensitivity[0] = ieee2ffp{file_ReadFloat{fid}}
     \mousesensitivity[1] = ieee2ffp{file_ReadFloat{fid}}
     CNIF #debug
-      ;NPrint Bin$(temp)
       NPrint "Controller deadzone: ", \ctrldeadzone[0]
       NPrint Bin$(\mousesensitivity[0])
       NPrint "Mouse X sensitivity: ", \mousesensitivity[0], ", ", Hex$(\mousesensitivity[0])
@@ -887,8 +882,8 @@ If fid >= 0
   End If
   file_Close{fid}
 Else
-  x.l = Request("TFEConfig", "Unable to open remapping file", "Cancel")
-    ef = True
+  x.l = Request("TFEConfig", "Unable to open remapping file||Please run TFE first|to create config file", "Cancel")
+  ef = True
 End If
 
 If ef Then End
@@ -1108,24 +1103,17 @@ Repeat
   End Select
 Until quit
 
-;CloseFont_ *Font
 End
 
 
 .newselection
   If selected = -1
-    ;If actions(ec)\populated[0]
-      GTEnable 0, #type1
-      GTEnable 0, #key1
-      GTEnable 0, #get1
-    ;End If
-    ;If actions(ec)\populated[1]
-      GTEnable 0, #type2
-      GTEnable 0, #key2
-      GTEnable 0, #get2
-    ;End If
-
-    ;GTEnable 0, #qualifier
+    GTEnable 0, #type1
+    GTEnable 0, #key1
+    GTEnable 0, #get1
+    GTEnable 0, #type2
+    GTEnable 0, #key2
+    GTEnable 0, #get2
   End If
 
   selected = ec + 1 ; compensating for skipping #IAS_ entries

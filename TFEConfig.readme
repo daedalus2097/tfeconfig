@@ -2,7 +2,7 @@ Short:        Control Editor for Dark Forces
 Author:       Rob Cranley
 Uploader:     robcranley@gmail.com (Rob Cranley)
 Type:         game/edit
-Version:      0.6
+Version:      0.8
 Architecture: m68k-amigaos >= 3.0
 Requires:     Amiga Dark Forces / TFE port
 
@@ -59,6 +59,9 @@ Save will save the current settings to the config file.
 
 History
 ~~~~~~~
+0.8 (09.09.2023)
+- Updated error message when the config file is not found to tell user to run
+  TFE first
 
 0.7 (31.08.2023)
 - Added Strafe action to list of bindable actions

@@ -1,5 +1,8 @@
 History
 ~~~~~~~
+0.8 (09.09.2023)
+- Updated error message when the config file is not found to tell user to run
+  TFE first
 
 0.7 (31.08.2023)
 - Added Strafe action to list of bindable actions
