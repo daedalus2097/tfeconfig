@@ -1,5 +1,12 @@
 History
 ~~~~~~~
+0.9 (21.09.2023)
+- Controller buttons now named based on controller type (PSX / CD32)
+- Added detection of PSX port adaptor to set controller mode
+- Added tooltypes to force PSX or CD32 mode
+- Added automatic reading of CD32 controller buttons in Get Key window
+- Removed qualifier option for mousewheel and controller binds
+
 0.8 (09.09.2023)
 - Updated error message when the config file is not found to tell user to run
   TFE first

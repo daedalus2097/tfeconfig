@@ -11,16 +11,16 @@
 ; Compiler
 ; -------------------------------------------------------
 ; StringBuffer    = 10240
-; MakeSmallest    = 0
+; MakeSmallest    = 1
 ; FuncOptimize    = 1
 ; Version         = 0.0.0
-; NumberOfBuilds  = 625
+; NumberOfBuilds  = 640
 ; 
 ; Debugger
 ; -------------------------------------------------------
 ; CliArgs         = ""
 ; StackSize       = 80000
-; RuntimeDebug    = 1
+; RuntimeDebug    = 0
 ; DebugInfo       = 0
 ; CreateDbgFile   = 0
 ; OverflowCheck   = 0
@@ -30,8 +30,8 @@
 ; 
 ; Editor
 ; -------------------------------------------------------
-; CursorLine      = 1029
-; CursorColumn    = 1
+; CursorLine      = 439
+; CursorColumn    = 12
 ; LabelSearch     = ""
 ; LabelRemark     = 0
 ; LabelAll        = 0
@@ -81,8 +81,8 @@
 Syntax 2
 optimize 4
 
-ver$ = "$VER: TFEConfig 0.8 (09.09.2023) By Rob Cranley"
-v$ = "0.8"
+ver$ = "$VER: TFEConfig 0.9 (21.09.2023) By Rob Cranley"
+v$ = "0.9"
 
 
 ; Main GUI Constants
@@ -114,10 +114,17 @@ v$ = "0.8"
 #maxkeys = 112
 #maxamigakeys = 103
 
+; Controller modes
+#unknown = 0
+#cd32 = 1
+#psx = 2
+
+
 ; OS 3.2 / 4.0 Define (not implemented)
 #IDCMP_EXTENDEDMOUSE = $08000000
 
 XINCLUDE "file.include.ab3"
+XINCLUDE "dos.include.ab3"
 
 error_SetFlags{0} ; Turn off the automatic error messages on file errors etc.
 
@@ -141,7 +148,7 @@ NEWTYPE .action
 End NEWTYPE
 
 
-DEFTYPE .w swidth, sheight
+DEFTYPE .w swidth, sheight, winwidth, winheight, controllermode
 DEFTYPE .l version, header
 DEFTYPE .TextFont *Font
 
@@ -324,7 +331,7 @@ End Function
 
 
 Function.l getcode{selected.w, currentbind.w}
-  SHARED swidth, sheight, rawkeys(), controllername$(), axisname$(), actions()
+  SHARED swidth, sheight, rawkeys(), controllername$(), axisname$(), actions(), controllermode
   result.l = 999
   winw.w = 220
   winh.w = 170
@@ -346,9 +353,11 @@ Function.l getcode{selected.w, currentbind.w}
       Case #keyboard
         GTText 1, #g_key, 5, 20, iw - 10, 16, "Key", #PLACETEXT_ABOVE, "Press Key"
         GTCycle 1, #g_special, 5, 52, iw - 10, 16, "Special Key", #PLACETEXT_ABOVE, "-|Left Shift|Right Shift|Control|Left Alt|Right Alt|Left Amiga|Right Amiga"
+        GTCycle 1, #g_qualifier, 5, 84, iw - 10, 16, "Qualifier", #PLACETEXT_ABOVE, "None|Alt|Control|Shift", actions(selected)\mapqualifier[currentbind]
 
       Case #mouse
         GTCycle 1, #g_mouse, 5, 30, iw - 10, 16, "Mouse Button", #PLACETEXT_ABOVE, "Left Mousebutton|Middle Mousebutton|Right Mousebutton|X1 Mousebutton|X2 Mousebutton", actions(selected)\mapcode
+        GTCycle 1, #g_qualifier, 5, 84, iw - 10, 16, "Qualifier", #PLACETEXT_ABOVE, "None|Alt|Control|Shift", actions(selected)\mapqualifier[currentbind]
 
       Case #controller
         For i.w = 0 To #CONTROLLER_BUTTON_COUNT - 1
@@ -378,8 +387,6 @@ Function.l getcode{selected.w, currentbind.w}
         GTCycle 1, #g_mousewheel, 5, 30, iw - 10, 16, "Mousewheel", #PLACETEXT_ABOVE, "Left|Right|Up|Down", actions(selected)\mapcode[currentbind]
     End Select
 
-    GTCycle 1, #g_qualifier, 5, 84, iw - 10, 16, "Qualifier", #PLACETEXT_ABOVE, "None|Alt|Control|Shift", actions(selected)\mapqualifier[currentbind]
-
     GTButton 1, #g_accept, 5, ih - 21, iw / 2 - 7, 16, "Accept", #PLACETEXT_IN
     GTButton 1, #g_cancel, iw / 2 + 2, ih - 21, iw / 2 - 7, 16, "Cancel", #PLACETEXT_IN
 
@@ -394,6 +401,7 @@ Function.l getcode{selected.w, currentbind.w}
         ec.l = EventCode
         eq.l = EventQualifier
         qualflag.b = False ; Set this to read qualifier
+
         Select ev
           Case #IDCMP_CLOSEWINDOW
             quit = True
@@ -502,6 +510,27 @@ Function.l getcode{selected.w, currentbind.w}
           ;Case #IDCMP_EXTENDEDMOUSE
           ;  NPrint "Extended Mouse"
         End Select
+
+        If controllermode = #cd32
+          gb.w = Gameb(1)
+          ;If gb Then NPrint "Game button: ", gb
+          Select gb
+            Case 1 ; Play
+              GTSetAttrs 1, #g_controller, #GTCY_Active, 5
+            Case 2 ; Rew
+              GTSetAttrs 1, #g_controller, #GTCY_Active, 8
+            Case 4 ; Ffw
+              GTSetAttrs 1, #g_controller, #GTCY_Active, 9
+            Case 8 ; Green
+              GTSetAttrs 1, #g_controller, #GTCY_Active, 2
+            Case 16 ; Yellow
+              GTSetAttrs 1, #g_controller, #GTCY_Active, 3
+            Case 32 ; Red
+              GTSetAttrs 1, #g_controller, #GTCY_Active, 0
+            Case 64 ; Blue
+              GTSetAttrs 1, #g_controller, #GTCY_Active, 1
+          End Select
+        End If
 
         If qualflag
           qual.w = #q_none
@@ -901,11 +930,83 @@ Next i
 
 
 
-swidth.w = ScreenWidth
-sheight.w = ScreenHeight
-winwidth.w = 320
-winheight.w = 200
+swidth = ScreenWidth
+sheight = ScreenHeight
+winwidth = 320
+winheight = 200
 
+
+
+controllermode = #cd32 ; Default to CD32
+
+; Check if a CD32 pad is in use (port 1)
+
+
+
+; Check if a PSX adaptor is in use
+
+*msgport.MsgPort = CreateMsgPort_()
+If *msgport
+  If *ioreq.IOStdReq = CreateIORequest_(*msgport, SizeOf.IOStdReq)
+    If OpenDevice_("psxport.device", 0, *ioreq, 0)
+      CloseDevice_ *ioreq
+      controllermode = #psx
+    Else
+      If OpenDevice_("psxport.device", 1, *ioreq, 0)
+        CloseDevice_ *ioreq
+        controllermode = #psx
+      Else
+        If OpenDevice_("psxport.device", 2, *ioreq, 0)
+          CloseDevice_ *ioreq
+          controllermode = #psx
+        Else
+          If OpenDevice_("psxport.device", 3, *ioreq, 0)
+            CloseDevice_ *ioreq
+            controllermode = #psx
+          End If
+        End If
+      End If
+    End If
+    DeleteIORequest_ *msgport
+  End If
+  DeleteMsgPort_ *msgport
+End If
+
+
+; Check if we should force a controller mode
+
+If dos_GetToolSwitch{"FORCECD32"}
+  controllermode = #cd32
+End If
+
+If dos_GetToolSwitch{"FORCEPSX"}
+  controllermode = #psx
+End If
+
+; And now substitute in relevant button names instead of the default combined ones
+
+Select controllermode
+  Case #psx
+    Restore psxcontrollernames
+  Case #cd32
+    Restore cd32controllernames
+End Select
+
+
+If controllermode <> #unknown
+  For i = 0 To #CONTROLLER_BUTTON_COUNT - 1
+    Read controllername$(i)
+  Next i
+End If
+
+.psxcontrollernames
+Data$ "Cross", "Circle", "Square", "Triangle", "Select", "Start", "<Unknown>", "Left Stick", "Right Stick", "Left Shoulder", "Right Shoulder", "DPad Up", "DPad Down", "DPad Left", "DPad Right"
+
+.cd32controllernames
+Data$ "Red", "Blue", "Green", "Yellow", "<unknown>", "Play", "<Unknown>", "<unknown>", "<unknown>", "Rewind", "Fast forward", "DPad Up", "DPad Down", "DPad Left", "DPad Right"
+
+
+; Set up our main window
 
 AddIDCMP #LISTVIEWIDCMP|#SLIDERIDCMP
 SubIDCMP #IDCMP_MOUSEMOVE
@@ -921,7 +1022,7 @@ iw.w = InnerWidth
 ih.w = InnerHeight
 
 
-GTNewLookProp On
+GTNewLookProp On ; This is needed to get borders and gadgets lining up
 
 GTTags #GTLV_ShowSelected, 0
 GTListView 0, #list, 5, 5, 160, 137, "", 0, listitems()

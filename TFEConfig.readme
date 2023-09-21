@@ -2,7 +2,7 @@ Short:        Control Editor for Dark Forces
 Author:       Rob Cranley
 Uploader:     robcranley@gmail.com (Rob Cranley)
 Type:         game/edit
-Version:      0.8
+Version:      0.9
 Architecture: m68k-amigaos >= 3.0
 Requires:     Amiga Dark Forces / TFE port
 
@@ -41,13 +41,22 @@ action, allowing the same function to be controlled by e.g. a key and a
 controller button. A cycle gadget for each binding allows the type of input to
 be selected (Keyboard, Mouse, Mousewheel, Controller buttons, Controller axes).
 Selecting None will disable that binding. Click the associated Get gadget to
-open a window allowing the specific key, button etc. to be selected. For
-keyboard controls, press the key and the chosen key will be registered in the
-window. Special keys (Ctrl, Shift, Alt & Amiga) won't be detected and should
-instead be selected from the Special Keys cycle gadget. The Qualifier cycle
-gadget lets you select a qualifier key that must also be pressed to perform the
-selected action; this will be set automatically if you hold the qualifier down
-and press the desired key. Clicking Accept or Cancel returns to the main window.
+open a window allowing the specific key, button etc. to be selected.
+
+For keyboard controls, press the key and the chosen key will be registered in
+the window. Special keys (Ctrl, Shift, Alt & Amiga) won't be detected and
+should instead be selected from the Special Keys cycle gadget. The Qualifier
+cycle gadget lets you select a qualifier key that must also be pressed to
+perform the selected action; this will be set automatically if you hold the
+qualifier down and press the desired key. Clicking Accept or Cancel returns to
+the main window.
+
+For controller buttons, TFEConfig will default to CD32 button naming. If a PSX
+adaptor is detected, the names will be switched to PSX naming instead. If the
+incorrect mode is selected, TFEConfig can be forced to display PSX or CD32
+names by setting the FORCEPSX or FORCECD32 tooltypes in the TFEConfig icon.
+Note that PSX or other controllers connected to the 9-pin Amiga game port via
+an adaptor will emulate a CD32 pad and so will be treated as a CD32 pad.
 
 Mouse opens the mouse options window, where mouse sensitivity and axis
 inversion can be set.
@@ -57,8 +66,16 @@ deadzone and inversion can be set.
 
 Save will save the current settings to the config file.
 
+
 History
 ~~~~~~~
+0.9 (21.09.2023)
+- Controller buttons now named based on controller type (PSX / CD32)
+- Added detection of PSX port adaptor to set controller mode
+- Added tooltypes to force PSX or CD32 mode
+- Added automatic reading of CD32 controller buttons in Get Key window
+- Removed qualifier option for mousewheel and controller binds
+
 0.8 (09.09.2023)
 - Updated error message when the config file is not found to tell user to run
   TFE first
