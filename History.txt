@@ -1,5 +1,10 @@
 History
 ~~~~~~~
+0.10 (08.11.2023)
+- Added automatic detection of D-pad for CD32 controller in Get Key window
+- Corrected order of next/previous weapon actions
+- Fixed incorrect ID used for Play/Start button on controllers
+
 0.9 (21.09.2023)
 - Controller buttons now named based on controller type (PSX / CD32)
 - Added detection of PSX port adaptor to set controller mode

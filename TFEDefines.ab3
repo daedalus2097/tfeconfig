@@ -30,8 +30,8 @@
 ; 
 ; Editor
 ; -------------------------------------------------------
-; CursorLine      = 31
-; CursorColumn    = 21
+; CursorLine      = 382
+; CursorColumn    = 86
 ; LabelSearch     = ""
 ; LabelRemark     = 0
 ; LabelAll        = 0
@@ -105,7 +105,7 @@ actioncount.w = 0
 
 .actionnames
 Data$ "Console", "Strafe", "Menu", "PDA", "Night Vision", "Cleats", "Gas Mask", "Head Lamp", "Headwave", "HUD", "Holster Weapon", "Automount"
-Data$ "Previous Weapon", "Next Weapon", "Swap Last Weapon", "Pause", "Automap", "- Screensize", "+ Screensize", "Map Zoom In", "Map Zoom Out", "Map Enable Scroll", "Map Scroll Up"
+Data$ "Next Weapon", "Previous Weapon", "Swap Last Weapon", "Pause", "Automap", "- Screensize", "+ Screensize", "Map Zoom In", "Map Zoom Out", "Map Enable Scroll", "Map Scroll Up"
 Data$ "Map Scroll Down", "Map Scroll Left", "Map Scroll Right", "Map Layer Up", "Map Layer Down", "Forward", "Backward", "Strafe Left", "Strafe Right", "Turn Left", "Turn Right", "Look Up", "Look Down", "Centre View"
 Data$ "Run", "Slow", "Crouch", "Jump", "Use", "Weapon 1", "Weapon 2", "Weapon 3", "Weapon 4", "Weapon 5", "Weapon 6", "Weapon 7", "Weapon 8", "Weapon 9", "Weapon 10", "Primary Fire", "Secondary Fire", "Quick Save", "Quick Load"
 
@@ -457,7 +457,7 @@ For i = 0 To #CONTROLLER_BUTTON_COUNT - 1
 Next i
 
 .controllernames
-Data$ "Cross / Red", "Circle / Blue", "Square / Green", "Triangle / Yellow", "Select", "Start / Play", "<Unknown>", "Left Stick", "Right Stick", "Left Shoulder / Rew", "Right Shoulder / Ffw", "DPad Up", "DPad Down", "DPad Left", "DPad Right"
+Data$ "Cross / Red", "Circle / Blue", "Square / Green", "Triangle / Yellow", "Select", "<Unknown>", "Start / Play", "Left Stick", "Right Stick", "Left Shoulder / Rew", "Right Shoulder / Ffw", "DPad Up", "DPad Down", "DPad Left", "DPad Right"
 
 
 ; Controller axis names

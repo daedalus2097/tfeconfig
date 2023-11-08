@@ -14,11 +14,11 @@
 ; MakeSmallest    = 1
 ; FuncOptimize    = 1
 ; Version         = 0.0.0
-; NumberOfBuilds  = 640
+; NumberOfBuilds  = 656
 ; 
 ; Debugger
 ; -------------------------------------------------------
-; CliArgs         = ""
+; CliArgs         = ">RAM:test.txt"
 ; StackSize       = 80000
 ; RuntimeDebug    = 0
 ; DebugInfo       = 0
@@ -30,8 +30,8 @@
 ; 
 ; Editor
 ; -------------------------------------------------------
-; CursorLine      = 439
-; CursorColumn    = 12
+; CursorLine      = 7
+; CursorColumn    = 33
 ; LabelSearch     = ""
 ; LabelRemark     = 0
 ; LabelAll        = 0
@@ -76,13 +76,13 @@
 ; Max Chunky      = 20
 ; /XTRA
 
-#debug = 0
+#debug = 1
 
 Syntax 2
 optimize 4
 
-ver$ = "$VER: TFEConfig 0.9 (21.09.2023) By Rob Cranley"
-v$ = "0.9"
+ver$ = "$VER: TFEConfig 0.10 (08.11.2023) By Rob Cranley"
+v$ = "0.10"
 
 
 ; Main GUI Constants
@@ -361,7 +361,7 @@ Function.l getcode{selected.w, currentbind.w}
 
       Case #controller
         For i.w = 0 To #CONTROLLER_BUTTON_COUNT - 1
-          If i <> 6 ; Skip unmappable entry
+          If i <> 7 ; Skip unmappable entry
             option$ + controllername$(i)
             If i < #CONTROLLER_BUTTON_COUNT - 1
               option$ + "|"
@@ -369,8 +369,8 @@ Function.l getcode{selected.w, currentbind.w}
           End If
         Next i
         currentoption.w = actions(selected)\mapcode[currentbind]
-        If currentoption >= 7
-          currentoption - 1
+        If currentoption >= 8
+          currentoption - 1 ; Compensate for skipped entry
         End If
         GTCycle 1, #g_controller, 5, 30, iw - 10, 16, "Controller Button", #PLACETEXT_ABOVE, option$, currentoption ; actions(selected)\mapcode[currentbind]
 
@@ -465,7 +465,7 @@ Function.l getcode{selected.w, currentbind.w}
 
                   Case #controller
                     result = GTGetAttrs(1, #g_controller, #GTCY_Active)
-                    If result >= 6
+                    If result >= 7
                       result + 1 ; Compensate for missing entry
                     End If
 
@@ -513,10 +513,12 @@ Function.l getcode{selected.w, currentbind.w}
 
         If controllermode = #cd32
           gb.w = Gameb(1)
+          jx.w = Joyx(1)
+          jy.w = Joyy(1)
           ;If gb Then NPrint "Game button: ", gb
           Select gb
             Case 1 ; Play
-              GTSetAttrs 1, #g_controller, #GTCY_Active, 5
+              GTSetAttrs 1, #g_controller, #GTCY_Active, 6
             Case 2 ; Rew
               GTSetAttrs 1, #g_controller, #GTCY_Active, 8
             Case 4 ; Ffw
@@ -530,6 +532,24 @@ Function.l getcode{selected.w, currentbind.w}
             Case 64 ; Blue
               GTSetAttrs 1, #g_controller, #GTCY_Active, 1
           End Select
+
+          If jy
+            If jy = 1 ; Down
+              GTSetAttrs 1, #g_controller, #GTCY_Active, 11
+            Else ; Up
+              GTSetAttrs 1, #g_controller, #GTCY_Active, 10
+            End If
+          End If
+
+          If jx
+            If jx = 1 ; Right
+              GTSetAttrs 1, #g_controller, #GTCY_Active, 13
+            Else ; Left
+              GTSetAttrs 1, #g_controller, #GTCY_Active, 12
+            End If
+
+          End If
+
         End If
 
         If qualflag
@@ -871,14 +891,17 @@ If fid >= 0
           bindnum = 1
         End If
       End If
+
       If bindnum <> -1
         actions(actioncode)\populated[bindnum] = 1
         actions(actioncode)\actiontype[bindnum] = file_ReadLong{fid}
         actions(actioncode)\mapcode[bindnum] = file_ReadLong{fid}
         actions(actioncode)\mapqualifier[bindnum] = file_ReadLong{fid}
+
         CNIF #debug
-          NPrint "Bind ", i, ", key: ", actions(actioncode)\mapcode
+          NPrint "Bind ", i, ", ActionCode ", actioncode, " (", actionname$(actioncode), "), bindnum: ", bindnum, ", key: ", actions(actioncode)\mapcode[bindnum]
         CEND
+
       Else
         dummy.l = file_ReadLong{fid} ; Still need to read those inputs to keep everything aligned.
         dummy.l = file_ReadLong{fid} ; Still need to read those inputs to keep everything aligned.
@@ -1000,10 +1023,10 @@ If controllermode <> #unknown
 End If
 
 .psxcontrollernames
-Data$ "Cross", "Circle", "Square", "Triangle", "Select", "Start", "<Unknown>", "Left Stick", "Right Stick", "Left Shoulder", "Right Shoulder", "DPad Up", "DPad Down", "DPad Left", "DPad Right"
+Data$ "Cross", "Circle", "Square", "Triangle", "Select", "<Unknown>", "Start", "Left Stick", "Right Stick", "Left Shoulder", "Right Shoulder", "DPad Up", "DPad Down", "DPad Left", "DPad Right"
 
 .cd32controllernames
-Data$ "Red", "Blue", "Green", "Yellow", "<unknown>", "Play", "<Unknown>", "<unknown>", "<unknown>", "Rewind", "Fast forward", "DPad Up", "DPad Down", "DPad Left", "DPad Right"
+Data$ "Red", "Blue", "Green", "Yellow", "<unknown>", "<Unknown>", "Play", "<unknown>", "<unknown>", "Rewind", "Fast forward", "DPad Up", "DPad Down", "DPad Left", "DPad Right"
 
 
 ; Set up our main window
